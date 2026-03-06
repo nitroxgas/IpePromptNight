@@ -1,6 +1,26 @@
 import type { SeedData, Project, Developer, Contribution } from './types'
 
-const SEED_URL = `${import.meta.env.BASE_URL}data/seed.json`
+function getLocationBasePath(): string {
+  if (typeof window === 'undefined') return '/'
+
+  const path = window.location.pathname
+  if (path.endsWith('/')) return path
+
+  const lastSegment = path.slice(path.lastIndexOf('/') + 1)
+  if (lastSegment.includes('.')) {
+    return path.slice(0, path.lastIndexOf('/') + 1)
+  }
+
+  return `${path}/`
+}
+
+function getSeedCandidates(): string[] {
+  const candidates = new Set<string>()
+  candidates.add(`${import.meta.env.BASE_URL}data/seed.json`)
+  candidates.add(`${getLocationBasePath()}data/seed.json`)
+  candidates.add('/data/seed.json')
+  return Array.from(candidates)
+}
 
 function assertProject(raw: unknown): asserts raw is Project {
   if (
@@ -42,8 +62,22 @@ function assertContribution(raw: unknown): asserts raw is Contribution {
 }
 
 export async function loadSeedData(): Promise<SeedData> {
-  const res = await fetch(SEED_URL)
-  if (!res.ok) throw new Error(`Failed to load seed data: ${res.status}`)
+  const attempts: string[] = []
+  let res: Response | null = null
+
+  for (const candidate of getSeedCandidates()) {
+    attempts.push(candidate)
+    const current = await fetch(candidate)
+    if (current.ok) {
+      res = current
+      break
+    }
+  }
+
+  if (!res) {
+    throw new Error(`Failed to load seed data (attempted: ${attempts.join(', ')})`)
+  }
+
   const data: unknown = await res.json()
   if (!data || typeof data !== 'object' || !('projects' in data) || !('developers' in data) || !('contributions' in data)) {
     throw new Error('Seed data must have projects, developers, contributions')
