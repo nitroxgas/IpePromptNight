@@ -150,11 +150,29 @@ npm run test:e2e
 
 ## 🌐 Deploy
 
-Para tornar o dashboard acessível publicamente na internet, faça deploy da pasta `frontend/dist/` em qualquer serviço de hospedagem estática:
+### GitHub Pages com GitHub Actions (configurado)
 
-- **Vercel**: Conecte o repositório e configure o diretório de build como `frontend`
-- **Netlify**: Configure o build command como `cd frontend && npm run build` e publish directory como `frontend/dist`
-- **GitHub Pages**: Use GitHub Actions para fazer build e deploy automático
+O repositório já inclui o workflow `.github/workflows/deploy-pages.yml`, que faz:
+
+- instalação de dependências da `frontend`
+- build com `VITE_BASE_PATH="/<repo>/" npm run build` para funcionar no Pages
+- publicação automática do conteúdo de `frontend/dist` no GitHub Pages
+
+#### Como ativar no GitHub
+
+1. Vá em **Settings > Pages** do repositório
+2. Em **Build and deployment**, selecione **Source: GitHub Actions**
+3. Faça push na branch `001-ipe-city-dashboard` (ou `main`)
+4. Acompanhe em **Actions** o workflow **Deploy Frontend to GitHub Pages**
+
+URL esperada após o deploy:
+
+`https://<seu-usuario>.github.io/IpePromptNight/`
+
+### Outras opções de hospedagem estática
+
+- **Vercel**: conecte o repositório e configure o diretório de build como `frontend`
+- **Netlify**: use build command `cd frontend && npm run build` e publish directory `frontend/dist`
 
 ## 🎨 Características Visuais
 
