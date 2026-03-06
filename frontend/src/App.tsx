@@ -26,7 +26,7 @@ function Scene({
   return (
     <>
       <color attach="background" args={['#78b8d8']} />
-      <fog attach="fog" args={['#90c8e0', 20, 50]} />
+      <fog attach="fog" args={['#90c8e0', 25, 60]} />
 
       {/* Warm golden-hour lighting */}
       <ambientLight intensity={0.5} color="#ffe8c8" />

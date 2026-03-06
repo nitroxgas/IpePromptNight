@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import type { Project, Developer, Contribution } from '@/data/types'
+import { Html } from '@react-three/drei'
 import { Building } from './Building'
 import { Tree } from './Tree'
 import { NPC } from './NPC'
@@ -98,22 +99,89 @@ const TREE_DATA: {
   { pos: [-2, 0, -7.5], scale: 1.1, variant: 'normal', seed: 3 },
   { pos: [3, 0, -7], scale: 1.0, variant: 'bioluminescent', seed: 4 },
   { pos: [8, 0, -7.5], scale: 1.3, variant: 'palm', seed: 5 },
-  { pos: [-8, 0, 7], scale: 1.1, variant: 'normal', seed: 6 },
-  { pos: [-4, 0, 8], scale: 1.0, variant: 'flowering', seed: 7 },
-  { pos: [0, 0, 7.5], scale: 0.8, variant: 'normal', seed: 8 },
-  { pos: [5, 0, 8], scale: 1.2, variant: 'bioluminescent', seed: 9 },
-  { pos: [10, 0, 7], scale: 0.9, variant: 'palm', seed: 10 },
   { pos: [-10, 0, -3], scale: 1.0, variant: 'normal', seed: 11 },
   { pos: [-10, 0, 2], scale: 1.3, variant: 'flowering', seed: 12 },
   { pos: [11, 0, -2], scale: 1.1, variant: 'normal', seed: 13 },
   { pos: [11, 0, 4], scale: 0.9, variant: 'bioluminescent', seed: 14 },
   { pos: [-7, 0, 4], scale: 1.0, variant: 'palm', seed: 19 },
-  { pos: [9, 0, -4], scale: 1.1, variant: 'normal', seed: 20 },
   { pos: [-1, 0, -5.5], scale: 0.7, variant: 'flowering', seed: 21 },
   { pos: [6, 0, 4.5], scale: 0.8, variant: 'normal', seed: 22 },
   { pos: [-6, 0, -1], scale: 0.75, variant: 'bioluminescent', seed: 23 },
   { pos: [8, 0, 2], scale: 0.85, variant: 'normal', seed: 24 },
 ]
+
+const HOUSES_DATA: {
+  name: string
+  pos: [number, number, number]
+  color: string
+  roofColor: string
+}[] = [
+  { name: 'DeHouse', pos: [-7.5, 0, 2.8], color: '#4ca0c0', roofColor: '#2a7898' },
+  { name: 'Network State House', pos: [9, 0, -2.2], color: '#8060b0', roofColor: '#6040a0' },
+  { name: 'Privacy House', pos: [-5.2, 0, -7.2], color: '#3a7a5a', roofColor: '#2a5a3a' },
+  { name: 'IA House', pos: [3.5, 0, 7.5], color: '#d0a050', roofColor: '#b08030' },
+  { name: 'Founder Haus', pos: [0, 0, 9.2], color: '#c45030', roofColor: '#983820' },
+]
+
+function House({
+  name,
+  position,
+  color,
+  roofColor,
+}: {
+  name: string
+  position: [number, number, number]
+  color: string
+  roofColor: string
+}) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.7, 0]} castShadow receiveShadow>
+        <boxGeometry args={[2.0, 1.4, 1.6]} />
+        <meshStandardMaterial color={color} roughness={0.7} metalness={0.05} />
+      </mesh>
+      <mesh position={[0, 0.04, 0]} castShadow>
+        <boxGeometry args={[2.1, 0.08, 1.7]} />
+        <meshStandardMaterial color="#6a6060" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 1.7, 0]} rotation={[0, Math.PI / 4, 0]} castShadow>
+        <coneGeometry args={[1.6, 0.9, 4]} />
+        <meshStandardMaterial color={roofColor} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.4, 0.81]}>
+        <planeGeometry args={[0.4, 0.7]} />
+        <meshStandardMaterial color="#3a2510" roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.5, 0.8, 0.81]}>
+        <planeGeometry args={[0.3, 0.3]} />
+        <meshBasicMaterial color="#fff3c4" />
+      </mesh>
+      <mesh position={[0.5, 0.8, 0.81]}>
+        <planeGeometry args={[0.3, 0.3]} />
+        <meshBasicMaterial color="#fff3c4" />
+      </mesh>
+      <Html position={[0, 2.8, 0]} center style={{ pointerEvents: 'none' }}>
+        <div
+          style={{
+            fontFamily: FONT_FAMILY,
+            fontWeight: 700,
+            padding: '4px 12px',
+            background: 'rgba(20,25,45,0.88)',
+            color: '#ffd54f',
+            fontSize: 11,
+            whiteSpace: 'nowrap',
+            borderRadius: 6,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(255,213,79,0.4)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+          }}
+        >
+          {name}
+        </div>
+      </Html>
+    </group>
+  )
+}
 
 const RESIDENT_NPC_DATA: {
   name: string
@@ -204,16 +272,16 @@ export function City({
 
   return (
     <>
-      {/* Ground — vibrant grass */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[32, 32]} />
+      {/* Ground — vibrant grass (ends before beach at z≈9.5) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, -5.25]} receiveShadow>
+        <planeGeometry args={[40, 29.5]} />
         <meshStandardMaterial color="#5a9a4a" roughness={0.92} metalness={0} />
       </mesh>
 
-      {/* Outer ring — darker grass edge */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
-        <ringGeometry args={[14, 18, 64]} />
-        <meshStandardMaterial color="#4a8a3a" roughness={0.95} />
+      {/* Grass-to-sand transition strip */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.002, 9.8]} receiveShadow>
+        <planeGeometry args={[40, 1]} />
+        <meshStandardMaterial color="#8aaa60" roughness={0.95} metalness={0} />
       </mesh>
 
       {/* Streets — warm sandstone paths */}
@@ -304,6 +372,70 @@ export function City({
       <LampPost position={[-5, 0, 2.8]} />
       <LampPost position={[0, 0, 2.8]} />
       <LampPost position={[5, 0, 2.8]} />
+
+      {/* Themed Houses */}
+      {HOUSES_DATA.map((h) => (
+        <House
+          key={h.name}
+          name={h.name}
+          position={h.pos}
+          color={h.color}
+          roofColor={h.roofColor}
+        />
+      ))}
+
+      {/* Beach — dry white sand */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.005, 11.5]} receiveShadow>
+        <planeGeometry args={[38, 4]} />
+        <meshStandardMaterial color="#f5edd8" roughness={0.98} metalness={0} />
+      </mesh>
+      {/* Beach — damp sand */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.004, 13.8]} receiveShadow>
+        <planeGeometry args={[38, 1.4]} />
+        <meshStandardMaterial color="#e0d4b0" roughness={0.92} metalness={0} />
+      </mesh>
+      {/* Beach — wet sand (reflective) */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.003, 14.7]} receiveShadow>
+        <planeGeometry args={[38, 0.6]} />
+        <meshStandardMaterial color="#c0b898" roughness={0.5} metalness={0.08} />
+      </mesh>
+      {/* Foam / waterline — thin white-blue edge */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.006, 15.1]}>
+        <planeGeometry args={[38, 0.25]} />
+        <meshBasicMaterial color="#e8f4fa" transparent opacity={0.85} />
+      </mesh>
+      {/* Shallow turquoise water */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 16]}>
+        <planeGeometry args={[38, 1.6]} />
+        <meshStandardMaterial
+          color="#58d0e8"
+          roughness={0.25}
+          metalness={0.1}
+          transparent
+          opacity={0.75}
+        />
+      </mesh>
+      {/* Deep ocean */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.04, 21]}>
+        <planeGeometry args={[44, 10]} />
+        <meshStandardMaterial
+          color="#1a70a8"
+          roughness={0.2}
+          metalness={0.15}
+          transparent
+          opacity={0.92}
+        />
+      </mesh>
+
+      {/* Beach palm trees */}
+      <Tree position={[-9, 0, 10.5]} scale={1.3} variant="palm" seed={30} />
+      <Tree position={[-3.5, 0, 11]} scale={1.1} variant="palm" seed={31} />
+      <Tree position={[1.5, 0, 10.5]} scale={1.4} variant="palm" seed={32} />
+      <Tree position={[7, 0, 11]} scale={1.0} variant="palm" seed={33} />
+      <Tree position={[-6, 0, 12]} scale={0.9} variant="palm" seed={34} />
+      <Tree position={[5, 0, 12.2]} scale={1.2} variant="palm" seed={35} />
+      <Tree position={[11, 0, 10.8]} scale={1.1} variant="palm" seed={36} />
+      <Tree position={[-12, 0, 11.5]} scale={1.0} variant="palm" seed={37} />
     </>
   )
 }
