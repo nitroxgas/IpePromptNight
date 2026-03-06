@@ -1,6 +1,7 @@
-import { useRef, useMemo } from 'react'
-import { Mesh } from 'three'
+import { useRef, useMemo, useState, useEffect } from 'react'
+import { Mesh, Group } from 'three'
 import { Html } from '@react-three/drei'
+import { useFrame } from '@react-three/fiber'
 import type { Project } from '@/data/types'
 
 const BASE_HEIGHT = 0.5
@@ -24,6 +25,7 @@ interface BuildingProps {
   onPointerOver?: () => void
   onPointerOut?: () => void
   isSelected?: boolean
+  currentContributions?: number // Contribuições acumuladas até o momento atual
 }
 
 function truncate(name: string, max = 14) {
@@ -70,15 +72,68 @@ export function Building({
   onPointerOver,
   onPointerOut,
   isSelected,
+  currentContributions,
 }: BuildingProps) {
   const meshRef = useRef<Mesh>(null)
-  const normalized = Math.min(1, Math.max(0, project.totalContributions / 400))
-  const height = BASE_HEIGHT + normalized * (MAX_HEIGHT - BASE_HEIGHT)
+  const groupRef = useRef<Group>(null)
+  // Usa currentContributions se fornecido, senão usa o total do projeto
+  const contributions = currentContributions ?? project.totalContributions
+  const normalized = Math.min(1, Math.max(0, contributions / 400))
+  const targetHeight = BASE_HEIGHT + normalized * (MAX_HEIGHT - BASE_HEIGHT)
   const seed = useMemo(() => project.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0), [project.id])
+  
+  // Inicializa com altura base ou targetHeight se já houver contribuições
+  const [animatedHeight, setAnimatedHeight] = useState(() => {
+    return contributions > 0 ? BASE_HEIGHT : BASE_HEIGHT
+  })
+  
+  // Anima suavemente a altura
+  useEffect(() => {
+    const duration = 800 // ms
+    const startHeight = animatedHeight
+    const heightDiff = targetHeight - startHeight
+    const startTime = Date.now()
+
+    if (Math.abs(heightDiff) < 0.01) {
+      setAnimatedHeight(targetHeight)
+      return
+    }
+
+    let animationId: number
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      // Easing function (ease-out)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setAnimatedHeight(startHeight + heightDiff * eased)
+
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate)
+      } else {
+        setAnimatedHeight(targetHeight)
+      }
+    }
+
+    animationId = requestAnimationFrame(animate)
+    return () => {
+      if (animationId) {
+        cancelAnimationFrame(animationId)
+      }
+    }
+  }, [targetHeight, animatedHeight])
+
+  const height = animatedHeight
   const windows = useWindowGrid(height, seed)
 
+  // Atualiza a posição do grupo baseado na altura animada
+  useFrame(() => {
+    if (groupRef.current) {
+      groupRef.current.position.y = height / 2
+    }
+  })
+
   return (
-    <group position={[x, height / 2, z]}>
+    <group ref={groupRef} position={[x, 0, z]}>
       <mesh
         ref={meshRef}
         castShadow

@@ -33,7 +33,9 @@ function assertContribution(raw: unknown): asserts raw is Contribution {
     !('projectId' in raw) ||
     !('developerId' in raw) ||
     typeof (raw as Contribution).commits !== 'number' ||
-    typeof (raw as Contribution).pullRequests !== 'number'
+    typeof (raw as Contribution).pullRequests !== 'number' ||
+    !('timestamp' in raw) ||
+    typeof (raw as Contribution).timestamp !== 'string'
   ) {
     throw new Error('Invalid contribution shape')
   }

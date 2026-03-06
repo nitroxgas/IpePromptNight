@@ -85,6 +85,8 @@ interface CityProps {
   selectedProjectId: string | null
   onSelectProject: (id: string | null) => void
   onHoverProject: (id: string | null) => void
+  currentTime?: Date // Timestamp atual para animação
+  contributionsByProject?: Map<string, number> // Mapa de contribuições acumuladas por projeto
 }
 
 export function City({
@@ -92,6 +94,7 @@ export function City({
   selectedProjectId,
   onSelectProject,
   onHoverProject,
+  contributionsByProject,
 }: CityProps) {
   const positions = useMapLayout(projects)
 
@@ -144,6 +147,7 @@ export function City({
 
       {projects.map((project, i) => {
         const [x, z] = positions[i]
+        const currentContributions = contributionsByProject?.get(project.id)
         return (
           <Building
             key={project.id}
@@ -154,6 +158,7 @@ export function City({
             onClick={() => onSelectProject(project.id)}
             onPointerOver={() => onHoverProject(project.id)}
             onPointerOut={() => onHoverProject(null)}
+            currentContributions={currentContributions}
           />
         )
       })}

@@ -1,4 +1,5 @@
 import type { SeedData, Project, Developer, Contribution } from '@/data/types'
+import { getContributionsUpTo } from '@/data/timeline'
 
 const FONT_FAMILY = "'Courier New', 'Doto', monospace"
 
@@ -7,25 +8,41 @@ interface SidePanelProps {
   selectedProjectId: string | null
   isOpen: boolean
   onToggle: () => void
+  currentTime?: Date
+  contributionsByProject?: Map<string, number>
 }
 
-function totalByDeveloper(contributions: Contribution[], developerId: string): number {
-  return contributions
+function totalByDeveloper(contributions: Contribution[], developerId: string, currentTime?: Date): number {
+  const filtered = currentTime
+    ? contributions.filter((c) => new Date(c.timestamp) <= currentTime)
+    : contributions
+  return filtered
     .filter((c) => c.developerId === developerId)
     .reduce((acc, c) => acc + c.commits + c.pullRequests, 0)
 }
 
-function contributionsForProject(contributions: Contribution[], projectId: string) {
-  return contributions.filter((c) => c.projectId === projectId)
+function contributionsForProject(contributions: Contribution[], projectId: string, currentTime?: Date) {
+  const filtered = contributions.filter((c) => c.projectId === projectId)
+  return currentTime ? filtered.filter((c) => new Date(c.timestamp) <= currentTime) : filtered
 }
 
-export function SidePanel({ data, selectedProjectId, isOpen, onToggle }: SidePanelProps) {
+export function SidePanel({
+  data,
+  selectedProjectId,
+  isOpen,
+  onToggle,
+  currentTime,
+  contributionsByProject,
+}: SidePanelProps) {
   const selectedProject = selectedProjectId
     ? data.projects.find((p) => p.id === selectedProjectId)
     : null
   const projectContributors = selectedProject
-    ? contributionsForProject(data.contributions, selectedProject.id)
+    ? contributionsForProject(data.contributions, selectedProject.id, currentTime)
     : []
+  const selectedProjectContributions = selectedProjectId
+    ? contributionsByProject?.get(selectedProjectId) ?? 0
+    : 0
 
   return (
     <>
@@ -78,7 +95,12 @@ export function SidePanel({ data, selectedProjectId, isOpen, onToggle }: SidePan
                 Projeto: {selectedProject.name}
               </h3>
               <p style={{ fontSize: 13, marginBottom: 12 }}>
-                Total: <strong>{selectedProject.totalContributions}</strong> (commits + PRs)
+                Total: <strong>{selectedProjectContributions}</strong> (commits + PRs)
+                {currentTime && selectedProjectContributions < selectedProject.totalContributions && (
+                  <span style={{ fontSize: 11, color: '#5a7a5a', marginLeft: 8 }}>
+                    (de {selectedProject.totalContributions})
+                  </span>
+                )}
               </p>
               <h4 style={{ fontSize: 12, color: '#4a6a4a', marginBottom: 6 }}>Contribuidores</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
@@ -99,23 +121,39 @@ export function SidePanel({ data, selectedProjectId, isOpen, onToggle }: SidePan
           <section style={{ marginBottom: 24 }}>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>Projetos</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {data.projects.map((p: Project) => (
-                <li key={p.id} style={{ fontSize: 12, marginBottom: 4 }}>
-                  {p.name}: <strong>{p.totalContributions}</strong>
-                </li>
-              ))}
+              {data.projects.map((p: Project) => {
+                const current = contributionsByProject?.get(p.id) ?? p.totalContributions
+                return (
+                  <li key={p.id} style={{ fontSize: 12, marginBottom: 4 }}>
+                    {p.name}: <strong>{current}</strong>
+                    {currentTime && current < p.totalContributions && (
+                      <span style={{ fontSize: 11, color: '#5a7a5a', marginLeft: 4 }}>
+                        (de {p.totalContributions})
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </section>
 
           <section>
             <h3 style={{ fontSize: 14, marginBottom: 8 }}>Desenvolvedores (total)</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {data.developers.map((d: Developer) => (
-                <li key={d.id} style={{ fontSize: 12, marginBottom: 4 }}>
-                  {d.name}:{' '}
-                  <strong>{totalByDeveloper(data.contributions, d.id)}</strong>
-                </li>
-              ))}
+              {data.developers.map((d: Developer) => {
+                const total = totalByDeveloper(data.contributions, d.id, currentTime)
+                const finalTotal = totalByDeveloper(data.contributions, d.id)
+                return (
+                  <li key={d.id} style={{ fontSize: 12, marginBottom: 4 }}>
+                    {d.name}: <strong>{total}</strong>
+                    {currentTime && total < finalTotal && (
+                      <span style={{ fontSize: 11, color: '#5a7a5a', marginLeft: 4 }}>
+                        (de {finalTotal})
+                      </span>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
           </section>
         </aside>

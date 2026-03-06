@@ -1,21 +1,25 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
 import { loadSeedData } from '@/data/loader'
 import type { SeedData } from '@/data/types'
 import { City } from '@/components/City'
 import { SidePanel } from '@/components/SidePanel'
+import { TimelineControl } from '@/components/TimelineControl'
+import { getTimeRange, getContributionsUpTo } from '@/data/timeline'
 
 function Scene({
   data,
   selectedId,
   onSelect,
   onHover,
+  contributionsByProject,
 }: {
   data: SeedData
   selectedId: string | null
   onSelect: (id: string | null) => void
   onHover: (id: string | null) => void
+  contributionsByProject: Map<string, number>
 }) {
   return (
     <>
@@ -41,6 +45,7 @@ function Scene({
         selectedProjectId={selectedId}
         onSelectProject={onSelect}
         onHoverProject={onHover}
+        contributionsByProject={contributionsByProject}
       />
       <OrbitControls
         enablePan
@@ -59,12 +64,66 @@ function App() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [hoverProjectId, setHoverProjectId] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(true)
+  const [currentTime, setCurrentTime] = useState<Date | null>(null)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const animationFrameRef = useRef<number>()
 
   useEffect(() => {
     loadSeedData()
-      .then(setData)
+      .then((loadedData) => {
+        setData(loadedData)
+        const { start } = getTimeRange(loadedData.contributions)
+        setCurrentTime(start)
+      })
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load data'))
   }, [])
+
+  // Animação da timeline
+  useEffect(() => {
+    if (!isPlaying || !data || !currentTime) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      return
+    }
+
+    const { end } = getTimeRange(data.contributions)
+    const startTime = Date.now()
+    const startTimestamp = currentTime.getTime()
+    const totalDuration = end.getTime() - startTimestamp
+
+    const animate = () => {
+      const elapsed = (Date.now() - startTime) * playbackSpeed
+      const newTimestamp = Math.min(startTimestamp + elapsed, end.getTime())
+      const newTime = new Date(newTimestamp)
+      setCurrentTime(newTime)
+
+      if (newTimestamp < end.getTime()) {
+        animationFrameRef.current = requestAnimationFrame(animate)
+      } else {
+        setIsPlaying(false)
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(animate)
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [isPlaying, data, playbackSpeed, currentTime])
+
+  // Calcula contribuições acumuladas até o tempo atual
+  const contributionsByProject = useMemo(() => {
+    if (!data || !currentTime) return new Map<string, number>()
+    const map = new Map<string, number>()
+    data.projects.forEach((project) => {
+      const total = getContributionsUpTo(data.contributions, project.id, currentTime)
+      map.set(project.id, total)
+    })
+    return map
+  }, [data, currentTime])
 
   if (error) {
     return (
@@ -74,7 +133,7 @@ function App() {
     )
   }
 
-  if (!data) {
+  if (!data || !currentTime) {
     return (
       <div style={{ padding: 24, color: '#5a7a5a', background: '#eef5ed', minHeight: '100vh' }}>
         Carregando…
@@ -108,6 +167,7 @@ function App() {
           selectedId={selectedProjectId}
           onSelect={setSelectedProjectId}
           onHover={setHoverProjectId}
+          contributionsByProject={contributionsByProject}
         />
       </Canvas>
       {hoverProjectId && (
@@ -129,14 +189,25 @@ function App() {
           }}
         >
           {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''} —{' '}
-          {data.projects.find((p) => p.id === hoverProjectId)?.totalContributions ?? 0} contribuições
+          {contributionsByProject.get(hoverProjectId) ?? 0} contribuições
         </div>
       )}
+      <TimelineControl
+        data={data}
+        currentTime={currentTime}
+        onTimeChange={setCurrentTime}
+        isPlaying={isPlaying}
+        onPlayPause={() => setIsPlaying((p) => !p)}
+        playbackSpeed={playbackSpeed}
+        onSpeedChange={setPlaybackSpeed}
+      />
       <SidePanel
         data={data}
         selectedProjectId={selectedProjectId}
         isOpen={panelOpen}
         onToggle={() => setPanelOpen((o) => !o)}
+        currentTime={currentTime}
+        contributionsByProject={contributionsByProject}
       />
     </div>
   )

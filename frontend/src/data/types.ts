@@ -14,6 +14,7 @@ export interface Contribution {
   developerId: string
   commits: number
   pullRequests: number
+  timestamp: string // ISO 8601 date string
 }
 
 export interface SeedData {
