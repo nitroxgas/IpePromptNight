@@ -8,6 +8,8 @@ import { SidePanel } from '@/components/SidePanel'
 import { TimelineControl } from '@/components/TimelineControl'
 import { getTimeRange, getContributionsUpTo } from '@/data/timeline'
 
+const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
+
 function Scene({
   data,
   selectedId,
@@ -23,25 +25,31 @@ function Scene({
 }) {
   return (
     <>
-      <color attach="background" args={['#b8d4c8']} />
-      <fog attach="fog" args={['#c5e0d4', 18, 42]} />
-      <ambientLight intensity={0.45} color="#e8f0e4" />
+      <color attach="background" args={['#78b8d8']} />
+      <fog attach="fog" args={['#90c8e0', 20, 50]} />
+
+      {/* Warm golden-hour lighting */}
+      <ambientLight intensity={0.5} color="#ffe8c8" />
       <directionalLight
         position={[10, 22, 8]}
-        intensity={1.1}
-        color="#fff5e6"
+        intensity={1.3}
+        color="#fff0d0"
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-far={50}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
+        shadow-camera-left={-15}
+        shadow-camera-right={15}
+        shadow-camera-top={15}
+        shadow-camera-bottom={-15}
       />
-      <pointLight position={[-4, 6, 2]} intensity={0.25} color="#f5e6c8" distance={25} />
-      <pointLight position={[5, 5, -2]} intensity={0.2} color="#d4e8c4" distance={22} />
+      <pointLight position={[-6, 8, 4]} intensity={0.35} color="#ffcc80" distance={30} />
+      <pointLight position={[6, 6, -4]} intensity={0.25} color="#80d0ff" distance={25} />
+      <hemisphereLight args={['#87ceeb', '#5a9a4a', 0.3]} />
+
       <City
         projects={data.projects}
+        developers={data.developers}
+        contributions={data.contributions}
         selectedProjectId={selectedId}
         onSelectProject={onSelect}
         onHoverProject={onHover}
@@ -68,6 +76,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const animationFrameRef = useRef<number>()
+  const introStarted = useRef(false)
 
   useEffect(() => {
     loadSeedData()
@@ -79,7 +88,31 @@ function App() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load data'))
   }, [])
 
-  // Animação da timeline
+  // Intro animation: sweep from start to end in 1s on load
+  useEffect(() => {
+    if (!data || introStarted.current) return
+    introStarted.current = true
+
+    const { start, end } = getTimeRange(data.contributions)
+    const totalRange = end.getTime() - start.getTime()
+    const introDuration = 1000
+    const t0 = Date.now()
+
+    let frameId: number
+    const animate = () => {
+      const elapsed = Date.now() - t0
+      const progress = Math.min(elapsed / introDuration, 1)
+      const eased = 1 - Math.pow(1 - progress, 3)
+      setCurrentTime(new Date(start.getTime() + eased * totalRange))
+      if (progress < 1) {
+        frameId = requestAnimationFrame(animate)
+      }
+    }
+
+    frameId = requestAnimationFrame(animate)
+    return () => cancelAnimationFrame(frameId)
+  }, [data])
+
   useEffect(() => {
     if (!isPlaying || !data || !currentTime) {
       if (animationFrameRef.current) {
@@ -91,7 +124,6 @@ function App() {
     const { end } = getTimeRange(data.contributions)
     const startTime = Date.now()
     const startTimestamp = currentTime.getTime()
-    const totalDuration = end.getTime() - startTimestamp
 
     const animate = () => {
       const elapsed = (Date.now() - startTime) * playbackSpeed
@@ -114,7 +146,6 @@ function App() {
     }
   }, [isPlaying, data, playbackSpeed, currentTime])
 
-  // Calcula contribuições acumuladas até o tempo atual
   const contributionsByProject = useMemo(() => {
     if (!data || !currentTime) return new Map<string, number>()
     const map = new Map<string, number>()
@@ -127,7 +158,15 @@ function App() {
 
   if (error) {
     return (
-      <div style={{ padding: 24, color: '#8b4513', background: '#f5f0e8', minHeight: '100vh' }}>
+      <div
+        style={{
+          padding: 24,
+          color: '#ff6b6b',
+          background: '#1a1a2e',
+          minHeight: '100vh',
+          fontFamily: FONT_FAMILY,
+        }}
+      >
         Erro: {error}
       </div>
     )
@@ -135,33 +174,52 @@ function App() {
 
   if (!data || !currentTime) {
     return (
-      <div style={{ padding: 24, color: '#5a7a5a', background: '#eef5ed', minHeight: '100vh' }}>
-        Carregando…
+      <div
+        style={{
+          padding: 24,
+          color: '#ffd54f',
+          background: '#1a1a2e',
+          minHeight: '100vh',
+          fontFamily: FONT_FAMILY,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 24,
+          fontWeight: 700,
+        }}
+      >
+        Carregando...
       </div>
     )
   }
 
   return (
-    <div style={{ width: '100%', height: '100vh', background: '#b8d4c8' }}>
+    <div style={{ width: '100%', height: '100vh', background: '#78b8d8' }}>
+      {/* Game-style title */}
       <h1
         style={{
           position: 'fixed',
           left: 20,
-          top: 20,
+          top: 16,
           margin: 0,
-          fontFamily: "'Courier New', 'Doto', monospace",
-          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
-          fontWeight: 700,
-          color: '#2d4a2d',
-          letterSpacing: '0.02em',
+          fontFamily: FONT_FAMILY,
+          fontSize: 'clamp(1.2rem, 3.5vw, 2rem)',
+          fontWeight: 800,
+          color: '#fff',
+          letterSpacing: '0.04em',
           zIndex: 10,
           pointerEvents: 'none',
-          textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(255,213,79,0.3)',
+          background: 'linear-gradient(135deg, rgba(30,40,60,0.8), rgba(50,70,100,0.7))',
+          padding: '8px 20px',
+          borderRadius: 12,
+          border: '2px solid rgba(255,213,79,0.4)',
         }}
       >
-        Ipê City Projects Dashboard
+        Ipe City
       </h1>
-      <Canvas shadows camera={{ position: [0, 8, 12], fov: 50 }}>
+
+      <Canvas shadows camera={{ position: [0, 10, 16], fov: 50 }}>
         <Scene
           data={data}
           selectedId={selectedProjectId}
@@ -170,28 +228,35 @@ function App() {
           contributionsByProject={contributionsByProject}
         />
       </Canvas>
+
+      {/* Hover tooltip — game style */}
       {hoverProjectId && (
         <div
           style={{
-            fontFamily: "'Courier New', 'Doto', monospace",
+            fontFamily: FONT_FAMILY,
             position: 'fixed',
             left: 20,
             top: 72,
-            padding: '8px 12px',
-            background: 'rgba(245, 250, 242, 0.92)',
-            color: '#2d4a2d',
+            padding: '8px 14px',
+            background: 'linear-gradient(135deg, rgba(30,40,60,0.9), rgba(50,70,100,0.85))',
+            color: '#fff',
             borderRadius: 8,
             fontSize: 13,
+            fontWeight: 600,
             zIndex: 10,
             pointerEvents: 'none',
-            boxShadow: '0 2px 12px rgba(45, 74, 45, 0.15)',
-            border: '1px solid rgba(100, 160, 100, 0.3)',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+            border: '1px solid rgba(255,213,79,0.4)',
           }}
         >
-          {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''} —{' '}
-          {contributionsByProject.get(hoverProjectId) ?? 0} contribuições
+          <span style={{ color: '#ffd54f' }}>
+            {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''}
+          </span>
+          {' — '}
+          {contributionsByProject.get(hoverProjectId) ?? 0} contribuicoes
         </div>
       )}
+
       <TimelineControl
         data={data}
         currentTime={currentTime}

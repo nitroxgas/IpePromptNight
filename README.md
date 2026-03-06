@@ -9,6 +9,8 @@ A ideia é visualizar a construção da Ipê City (Seus projetos), a medida que 
 
 ![Dashboard Ipê City](./ipedash.png)
 
+![Dashboard Ipê City v1.1](./IpeDash2.png)
+
 ## 🎯 Funcionalidades
 
 - **Visualização 3D em Cidade**: Cada prédio representa um repositório da organização, com nome visível no topo e altura proporcional às contribuições

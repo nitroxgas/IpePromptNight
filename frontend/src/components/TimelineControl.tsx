@@ -1,8 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
 import type { SeedData } from '@/data/types'
 import { getTimeRange } from '@/data/timeline'
 
-const FONT_FAMILY = "'Courier New', 'Doto', monospace"
+const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 
 interface TimelineControlProps {
   data: SeedData
@@ -49,6 +48,15 @@ export function TimelineControl({
     onTimeChange(end)
   }
 
+  const btnBase: React.CSSProperties = {
+    fontFamily: FONT_FAMILY,
+    border: '2px solid rgba(255,255,255,0.2)',
+    borderRadius: 8,
+    cursor: 'pointer',
+    fontWeight: 700,
+    transition: 'transform 0.1s',
+  }
+
   return (
     <div
       style={{
@@ -57,71 +65,67 @@ export function TimelineControl({
         bottom: 24,
         left: '50%',
         transform: 'translateX(-50%)',
-        background: 'rgba(245, 250, 242, 0.95)',
-        padding: '16px 24px',
-        borderRadius: 12,
-        boxShadow: '0 4px 20px rgba(45, 74, 45, 0.2)',
-        border: '1px solid rgba(100, 160, 100, 0.3)',
+        background: 'linear-gradient(135deg, rgba(20,25,45,0.94), rgba(30,40,60,0.92))',
+        padding: '14px 22px',
+        borderRadius: 14,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.35), 0 0 30px rgba(255,213,79,0.08)',
+        border: '2px solid rgba(255,213,79,0.25)',
         zIndex: 20,
-        minWidth: 500,
+        minWidth: 480,
         maxWidth: '90vw',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <button
           type="button"
           onClick={onPlayPause}
           style={{
-            padding: '8px 16px',
-            background: isPlaying ? '#3d5a4a' : '#5a7a5a',
-            color: '#f5f5eb',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
-            fontSize: 14,
-            fontWeight: 600,
-            minWidth: 80,
+            ...btnBase,
+            padding: '8px 18px',
+            background: isPlaying
+              ? 'linear-gradient(135deg, #ff6b6b, #ee5a24)'
+              : 'linear-gradient(135deg, #ffd54f, #ffb300)',
+            color: isPlaying ? '#fff' : '#1a1a2e',
+            fontSize: 13,
+            minWidth: 90,
           }}
         >
-          {isPlaying ? '⏸ Pausar' : '▶ Reproduzir'}
+          {isPlaying ? 'Pausar' : 'Reproduzir'}
         </button>
         <button
           type="button"
           onClick={handleReset}
           style={{
-            padding: '8px 12px',
-            background: '#6b8f6e',
-            color: '#f5f5eb',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
+            ...btnBase,
+            padding: '6px 12px',
+            background: 'rgba(255,255,255,0.1)',
+            color: '#b0b8d0',
             fontSize: 12,
           }}
         >
-          ⏮ Início
+          Inicio
         </button>
         <button
           type="button"
           onClick={handleJumpToEnd}
           style={{
-            padding: '8px 12px',
-            background: '#6b8f6e',
-            color: '#f5f5eb',
-            border: 'none',
-            borderRadius: 6,
-            cursor: 'pointer',
+            ...btnBase,
+            padding: '6px 12px',
+            background: 'rgba(255,255,255,0.1)',
+            color: '#b0b8d0',
             fontSize: 12,
           }}
         >
-          ⏭ Fim
+          Fim
         </button>
         <select
           value={playbackSpeed}
           onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
           style={{
             padding: '6px 10px',
-            background: '#fff',
-            border: '1px solid rgba(100, 160, 100, 0.4)',
+            background: 'rgba(255,255,255,0.1)',
+            color: '#b0b8d0',
+            border: '1px solid rgba(255,255,255,0.15)',
             borderRadius: 6,
             fontSize: 12,
             cursor: 'pointer',
@@ -134,6 +138,7 @@ export function TimelineControl({
           <option value={4}>4x</option>
         </select>
       </div>
+
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <input
           type="range"
@@ -146,33 +151,36 @@ export function TimelineControl({
             flex: 1,
             height: 6,
             borderRadius: 3,
-            background: '#c4d4b8',
+            background: `linear-gradient(to right, #ffd54f ${currentProgress * 100}%, rgba(255,255,255,0.15) ${currentProgress * 100}%)`,
             outline: 'none',
             cursor: 'pointer',
+            WebkitAppearance: 'none',
           }}
         />
         <div
           style={{
             fontSize: 12,
-            color: '#2d4a2d',
-            minWidth: 200,
+            color: '#ffd54f',
+            fontWeight: 600,
+            minWidth: 140,
             textAlign: 'right',
           }}
         >
           {formatDate(currentTime)}
         </div>
       </div>
+
       <div
         style={{
-          fontSize: 11,
-          color: '#5a7a5a',
+          fontSize: 10,
+          color: '#6870888',
           marginTop: 4,
           display: 'flex',
           justifyContent: 'space-between',
         }}
       >
-        <span>{formatDate(start)}</span>
-        <span>{formatDate(end)}</span>
+        <span style={{ color: '#687088' }}>{formatDate(start)}</span>
+        <span style={{ color: '#687088' }}>{formatDate(end)}</span>
       </div>
     </div>
   )
