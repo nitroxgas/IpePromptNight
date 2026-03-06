@@ -84,6 +84,24 @@ function App() {
 
   return (
     <div style={{ width: '100%', height: '100vh', background: '#b8d4c8' }}>
+      <h1
+        style={{
+          position: 'fixed',
+          left: 20,
+          top: 20,
+          margin: 0,
+          fontFamily: "'Courier New', 'Doto', monospace",
+          fontSize: 'clamp(1.5rem, 4vw, 2.5rem)',
+          fontWeight: 700,
+          color: '#2d4a2d',
+          letterSpacing: '0.02em',
+          zIndex: 10,
+          pointerEvents: 'none',
+          textShadow: '0 1px 2px rgba(255,255,255,0.4)',
+        }}
+      >
+        Ipê City Projects Dashboard
+      </h1>
       <Canvas shadows camera={{ position: [0, 8, 12], fov: 50 }}>
         <Scene
           data={data}
@@ -97,8 +115,8 @@ function App() {
           style={{
             fontFamily: "'Courier New', 'Doto', monospace",
             position: 'fixed',
-            left: 16,
-            top: 16,
+            left: 20,
+            top: 72,
             padding: '8px 12px',
             background: 'rgba(245, 250, 242, 0.92)',
             color: '#2d4a2d',

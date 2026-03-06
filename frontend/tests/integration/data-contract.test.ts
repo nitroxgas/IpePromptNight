@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import type { SeedData, Project, Contribution } from '../../src/data/types'
+import { validateLayout } from '../../src/components/City'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const seedPath = path.resolve(__dirname, '../../public/data/seed.json')
@@ -57,5 +58,14 @@ describe('Seed data contract', () => {
         .reduce((acc, c) => acc + c.commits + c.pullRequests, 0)
       expect(sum).toBe(project.totalContributions)
     }
+  })
+})
+
+describe('Dashboard layout', () => {
+  it('every project has one building and no overlap (validateLayout passes)', () => {
+    const data = loadSeed()
+    const result = validateLayout(data.projects)
+    expect(result.ok).toBe(true)
+    expect(result.errors).toEqual([])
   })
 })

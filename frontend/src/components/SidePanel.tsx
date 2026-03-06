@@ -39,12 +39,13 @@ export function SidePanel({ data, selectedProjectId, isOpen, onToggle }: SidePan
           right: 16,
           zIndex: 20,
           padding: '8px 14px',
-          background: '#2d5016',
-          color: '#fff',
-          border: 'none',
-          borderRadius: 6,
+          background: '#3d5a4a',
+          color: '#f5f5eb',
+          border: '1px solid rgba(100, 140, 100, 0.4)',
+          borderRadius: 8,
           cursor: 'pointer',
           fontSize: 14,
+          boxShadow: '0 2px 8px rgba(45, 74, 45, 0.2)',
         }}
       >
         {isOpen ? 'Fechar painel' : 'Abrir painel'}
@@ -59,26 +60,27 @@ export function SidePanel({ data, selectedProjectId, isOpen, onToggle }: SidePan
             width: 320,
             maxWidth: '90vw',
             height: '100vh',
-            background: 'rgba(10,10,15,0.97)',
-            color: '#e0e0e0',
+            background: 'rgba(245, 250, 242, 0.97)',
+            color: '#2d4a2d',
             padding: 24,
             paddingTop: 56,
             overflowY: 'auto',
             zIndex: 15,
-            borderLeft: '1px solid #333',
+            borderLeft: '1px solid rgba(100, 160, 100, 0.35)',
+            boxShadow: '-4px 0 20px rgba(45, 74, 45, 0.08)',
           }}
         >
           <h2 style={{ fontSize: 18, marginBottom: 16 }}>Contribuições</h2>
 
           {selectedProject ? (
             <section style={{ marginBottom: 24 }}>
-              <h3 style={{ fontSize: 14, color: '#8f8', marginBottom: 8 }}>
+              <h3 style={{ fontSize: 14, color: '#2d5a2d', marginBottom: 8 }}>
                 Projeto: {selectedProject.name}
               </h3>
               <p style={{ fontSize: 13, marginBottom: 12 }}>
                 Total: <strong>{selectedProject.totalContributions}</strong> (commits + PRs)
               </p>
-              <h4 style={{ fontSize: 12, color: '#aaa', marginBottom: 6 }}>Contribuidores</h4>
+              <h4 style={{ fontSize: 12, color: '#4a6a4a', marginBottom: 6 }}>Contribuidores</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {projectContributors.map((c) => {
                   const dev = data.developers.find((d) => d.id === c.developerId)

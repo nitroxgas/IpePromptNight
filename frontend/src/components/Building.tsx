@@ -89,8 +89,8 @@ export function Building({
       >
         <boxGeometry args={[WIDTH, height, DEPTH]} />
         <meshStandardMaterial
-          color={isSelected ? '#2a3a4a' : NIGHT_BUILDING_COLOR}
-          emissive={isSelected ? '#0f1520' : NIGHT_BUILDING_EMISSIVE}
+          color={isSelected ? BUILDING_SELECTED : BUILDING_COLOR}
+          emissive={isSelected ? '#243d30' : BUILDING_EMISSIVE}
           metalness={0.3}
           roughness={0.85}
         />
