@@ -5,6 +5,8 @@ Este projeto foi constuido como resposta para o desafio proposto na **Prompt Nig
 Dashboard web interativo que visualiza as contribuições dos repositórios da **Ipê City** em forma de cidade 3D (estilo Git City). Cada edificação representa um projeto, com altura proporcional à quantidade de contribuições, permitindo uma visualização intuitiva da atividade dos repositórios.
 A ideia é visualizar a construção da Ipê City (Seus projetos), a medida que eles forem sendo implementados durante o período em que ela ocorrer.
 
+
+
 ## 🎯 Funcionalidades
 
 - **Visualização 3D em Cidade**: Cada prédio representa um repositório da organização, com nome visível no topo e altura proporcional às contribuições
