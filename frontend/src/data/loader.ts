@@ -1,6 +1,6 @@
 import type { SeedData, Project, Developer, Contribution } from './types'
 
-const SEED_URL = '/data/seed.json'
+const SEED_URL = `${import.meta.env.BASE_URL}data/seed.json`
 
 function assertProject(raw: unknown): asserts raw is Project {
   if (
