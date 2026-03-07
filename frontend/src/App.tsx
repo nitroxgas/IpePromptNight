@@ -16,12 +16,14 @@ function Scene({
   onSelect,
   onHover,
   contributionsByProject,
+  isMobile,
 }: {
   data: SeedData
   selectedId: string | null
   onSelect: (id: string | null) => void
   onHover: (id: string | null) => void
   contributionsByProject: Map<string, number>
+  isMobile: boolean
 }) {
   return (
     <>
@@ -56,10 +58,10 @@ function Scene({
         contributionsByProject={contributionsByProject}
       />
       <OrbitControls
-        enablePan
+        enablePan={!isMobile}
         enableZoom
-        minDistance={5}
-        maxDistance={40}
+        minDistance={isMobile ? 7 : 5}
+        maxDistance={isMobile ? 32 : 40}
         maxPolarAngle={Math.PI / 2 - 0.1}
       />
     </>
@@ -75,8 +77,15 @@ function App() {
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
   const animationFrameRef = useRef<number>()
   const introStarted = useRef(false)
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= 900)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
 
   useEffect(() => {
     loadSeedData()
@@ -199,8 +208,8 @@ function App() {
       <h1
         style={{
           position: 'fixed',
-          left: 20,
-          top: 16,
+          left: isMobile ? 10 : 20,
+          top: isMobile ? 10 : 16,
           margin: 0,
           fontFamily: FONT_FAMILY,
           fontSize: 'clamp(1.2rem, 3.5vw, 2rem)',
@@ -211,7 +220,7 @@ function App() {
           pointerEvents: 'none',
           textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(255,213,79,0.3)',
           background: 'linear-gradient(135deg, rgba(30,40,60,0.8), rgba(50,70,100,0.7))',
-          padding: '8px 20px',
+          padding: isMobile ? '6px 12px' : '8px 20px',
           borderRadius: 12,
           border: '2px solid rgba(255,213,79,0.4)',
         }}
@@ -219,18 +228,23 @@ function App() {
         Ipe City
       </h1>
 
-      <Canvas shadows camera={{ position: [0, 10, 16], fov: 50 }}>
+      <Canvas
+        style={{ touchAction: 'none' }}
+        shadows
+        camera={{ position: isMobile ? [0, 11, 19] : [0, 10, 16], fov: isMobile ? 58 : 50 }}
+      >
         <Scene
           data={data}
           selectedId={selectedProjectId}
           onSelect={setSelectedProjectId}
           onHover={setHoverProjectId}
           contributionsByProject={contributionsByProject}
+          isMobile={isMobile}
         />
       </Canvas>
 
       {/* Hover tooltip — game style */}
-      {hoverProjectId && (
+      {!isMobile && hoverProjectId && (
         <div
           style={{
             fontFamily: FONT_FAMILY,
@@ -265,6 +279,7 @@ function App() {
         onPlayPause={() => setIsPlaying((p) => !p)}
         playbackSpeed={playbackSpeed}
         onSpeedChange={setPlaybackSpeed}
+        isMobile={isMobile}
       />
       <SidePanel
         data={data}
@@ -273,6 +288,7 @@ function App() {
         onToggle={() => setPanelOpen((o) => !o)}
         currentTime={currentTime}
         contributionsByProject={contributionsByProject}
+        isMobile={isMobile}
       />
     </div>
   )

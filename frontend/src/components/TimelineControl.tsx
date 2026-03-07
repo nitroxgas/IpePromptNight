@@ -11,6 +11,7 @@ interface TimelineControlProps {
   onPlayPause: () => void
   playbackSpeed: number
   onSpeedChange: (speed: number) => void
+  isMobile?: boolean
 }
 
 export function TimelineControl({
@@ -21,10 +22,13 @@ export function TimelineControl({
   onPlayPause,
   playbackSpeed,
   onSpeedChange,
+  isMobile = false,
 }: TimelineControlProps) {
   const { start, end } = getTimeRange(data.contributions)
   const totalDuration = end.getTime() - start.getTime()
-  const currentProgress = (currentTime.getTime() - start.getTime()) / totalDuration
+  const currentProgress =
+    totalDuration > 0 ? (currentTime.getTime() - start.getTime()) / totalDuration : 0
+  const speedOptions = [0.5, 1, 2, 4, 8, 12, 16, 24, 32, 50]
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('pt-BR', {
@@ -62,32 +66,40 @@ export function TimelineControl({
       style={{
         fontFamily: FONT_FAMILY,
         position: 'fixed',
-        bottom: 24,
+        bottom: isMobile ? 12 : 24,
         left: '50%',
         transform: 'translateX(-50%)',
         background: 'linear-gradient(135deg, rgba(20,25,45,0.94), rgba(30,40,60,0.92))',
-        padding: '14px 22px',
-        borderRadius: 14,
+        padding: isMobile ? '12px 12px' : '14px 22px',
+        borderRadius: isMobile ? 12 : 14,
         boxShadow: '0 4px 24px rgba(0,0,0,0.35), 0 0 30px rgba(255,213,79,0.08)',
         border: '2px solid rgba(255,213,79,0.25)',
         zIndex: 20,
-        minWidth: 480,
-        maxWidth: '90vw',
+        minWidth: isMobile ? 'calc(100vw - 20px)' : 480,
+        maxWidth: isMobile ? 'calc(100vw - 20px)' : '90vw',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          marginBottom: 10,
+          flexWrap: 'wrap',
+        }}
+      >
         <button
           type="button"
           onClick={onPlayPause}
           style={{
             ...btnBase,
-            padding: '8px 18px',
+            padding: isMobile ? '10px 14px' : '8px 18px',
             background: isPlaying
               ? 'linear-gradient(135deg, #ff6b6b, #ee5a24)'
               : 'linear-gradient(135deg, #ffd54f, #ffb300)',
             color: isPlaying ? '#fff' : '#1a1a2e',
-            fontSize: 13,
-            minWidth: 90,
+            fontSize: isMobile ? 12 : 13,
+            minWidth: isMobile ? 100 : 90,
           }}
         >
           {isPlaying ? 'Pausar' : 'Reproduzir'}
@@ -97,7 +109,7 @@ export function TimelineControl({
           onClick={handleReset}
           style={{
             ...btnBase,
-            padding: '6px 12px',
+            padding: isMobile ? '8px 12px' : '6px 12px',
             background: 'rgba(255,255,255,0.1)',
             color: '#b0b8d0',
             fontSize: 12,
@@ -110,7 +122,7 @@ export function TimelineControl({
           onClick={handleJumpToEnd}
           style={{
             ...btnBase,
-            padding: '6px 12px',
+            padding: isMobile ? '8px 12px' : '6px 12px',
             background: 'rgba(255,255,255,0.1)',
             color: '#b0b8d0',
             fontSize: 12,
@@ -122,7 +134,7 @@ export function TimelineControl({
           value={playbackSpeed}
           onChange={(e) => onSpeedChange(parseFloat(e.target.value))}
           style={{
-            padding: '6px 10px',
+            padding: isMobile ? '8px 10px' : '6px 10px',
             background: 'rgba(255,255,255,0.1)',
             color: '#b0b8d0',
             border: '1px solid rgba(255,255,255,0.15)',
@@ -130,16 +142,25 @@ export function TimelineControl({
             fontSize: 12,
             cursor: 'pointer',
             fontFamily: FONT_FAMILY,
+            minWidth: isMobile ? 86 : 72,
           }}
         >
-          <option value={0.5}>0.5x</option>
-          <option value={1}>1x</option>
-          <option value={2}>2x</option>
-          <option value={4}>4x</option>
+          {speedOptions.map((speed) => (
+            <option key={speed} value={speed}>
+              {speed}x
+            </option>
+          ))}
         </select>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: isMobile ? 'stretch' : 'center',
+          gap: isMobile ? 8 : 12,
+          flexDirection: isMobile ? 'column' : 'row',
+        }}
+      >
         <input
           type="range"
           min={0}
@@ -162,8 +183,8 @@ export function TimelineControl({
             fontSize: 12,
             color: '#ffd54f',
             fontWeight: 600,
-            minWidth: 140,
-            textAlign: 'right',
+            minWidth: isMobile ? 'auto' : 140,
+            textAlign: isMobile ? 'left' : 'right',
           }}
         >
           {formatDate(currentTime)}
@@ -173,7 +194,7 @@ export function TimelineControl({
       <div
         style={{
           fontSize: 10,
-          color: '#6870888',
+          color: '#687088',
           marginTop: 4,
           display: 'flex',
           justifyContent: 'space-between',

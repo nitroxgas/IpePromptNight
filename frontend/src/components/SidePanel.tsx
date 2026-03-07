@@ -16,6 +16,7 @@ interface SidePanelProps {
   onToggle: () => void
   currentTime?: Date
   contributionsByProject?: Map<string, number>
+  isMobile?: boolean
 }
 
 function totalByDeveloper(
@@ -52,6 +53,7 @@ export function SidePanel({
   onToggle,
   currentTime,
   contributionsByProject,
+  isMobile = false,
 }: SidePanelProps) {
   const selectedProject = selectedProjectId
     ? data.projects.find((p) => p.id === selectedProjectId)
@@ -77,16 +79,17 @@ export function SidePanel({
         style={{
           fontFamily: FONT_FAMILY,
           position: 'fixed',
-          top: 16,
+          top: isMobile ? 'auto' : 16,
           right: 16,
+          bottom: isMobile ? 138 : 'auto',
           zIndex: 20,
-          padding: '8px 16px',
+          padding: isMobile ? '10px 14px' : '8px 16px',
           background: 'linear-gradient(135deg, #ffd54f, #ffb300)',
           color: '#1a1a2e',
           border: '2px solid rgba(255,255,255,0.3)',
           borderRadius: 10,
           cursor: 'pointer',
-          fontSize: 13,
+          fontSize: isMobile ? 12 : 13,
           fontWeight: 700,
           boxShadow: '0 3px 12px rgba(255,213,79,0.3)',
           letterSpacing: '0.02em',
@@ -100,19 +103,22 @@ export function SidePanel({
           style={{
             fontFamily: FONT_FAMILY,
             position: 'fixed',
-            top: 0,
-            right: 0,
-            width: 340,
-            maxWidth: '90vw',
-            height: '100vh',
+            top: isMobile ? 'auto' : 0,
+            right: isMobile ? 8 : 0,
+            left: isMobile ? 8 : 'auto',
+            bottom: isMobile ? 8 : 'auto',
+            width: isMobile ? 'auto' : 340,
+            maxWidth: isMobile ? 'none' : '90vw',
+            height: isMobile ? 'min(60vh, 560px)' : '100vh',
             background: panelBg,
             color: textColor,
-            padding: 20,
-            paddingTop: 56,
+            padding: isMobile ? 14 : 20,
+            paddingTop: isMobile ? 16 : 56,
             overflowY: 'auto',
             zIndex: 15,
-            borderLeft: '2px solid rgba(255,213,79,0.25)',
-            boxShadow: '-4px 0 24px rgba(0,0,0,0.3)',
+            borderLeft: isMobile ? '1px solid rgba(255,213,79,0.25)' : '2px solid rgba(255,213,79,0.25)',
+            borderRadius: isMobile ? 12 : 0,
+            boxShadow: isMobile ? '0 8px 24px rgba(0,0,0,0.35)' : '-4px 0 24px rgba(0,0,0,0.3)',
           }}
         >
           <h2
