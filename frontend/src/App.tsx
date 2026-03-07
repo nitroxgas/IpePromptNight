@@ -6,9 +6,41 @@ import type { SeedData } from '@/data/types'
 import { City } from '@/components/City'
 import { SidePanel } from '@/components/SidePanel'
 import { TimelineControl } from '@/components/TimelineControl'
-import { getTimeRange, getContributionsUpTo } from '@/data/timeline'
+import { getContributionsUpTo } from '@/data/timeline'
 
 const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
+const BASE_PLAYBACK_DURATION_MS = 15000
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value))
+}
+
+function buildTimelinePoints(data: SeedData): Date[] {
+  const points = Array.from(
+    new Set(
+      data.contributions
+        .map((c) => new Date(c.timestamp).getTime())
+        .filter((ts) => Number.isFinite(ts)),
+    ),
+  )
+    .sort((a, b) => a - b)
+    .map((ts) => new Date(ts))
+
+  if (points.length > 0) return points
+  return [new Date()]
+}
+
+function progressToDate(progress: number, points: Date[]): Date {
+  if (points.length === 1) return points[0]
+  const p = clamp01(progress)
+  const position = p * (points.length - 1)
+  const lowerIndex = Math.floor(position)
+  const upperIndex = Math.min(points.length - 1, Math.ceil(position))
+  const t = position - lowerIndex
+  const lower = points[lowerIndex].getTime()
+  const upper = points[upperIndex].getTime()
+  return new Date(lower + (upper - lower) * t)
+}
 
 function Scene({
   data,
@@ -74,7 +106,7 @@ function App() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [hoverProjectId, setHoverProjectId] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 900)
-  const [currentTime, setCurrentTime] = useState<Date | null>(null)
+  const [timelineProgress, setTimelineProgress] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
@@ -91,19 +123,26 @@ function App() {
     loadSeedData()
       .then((loadedData) => {
         setData(loadedData)
-        const { start } = getTimeRange(loadedData.contributions)
-        setCurrentTime(start)
+        setTimelineProgress(0)
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load data'))
   }, [])
+
+  const timelinePoints = useMemo(() => {
+    if (!data) return []
+    return buildTimelinePoints(data)
+  }, [data])
+
+  const currentTime = useMemo(() => {
+    if (!data || timelinePoints.length === 0) return null
+    return progressToDate(timelineProgress, timelinePoints)
+  }, [data, timelineProgress, timelinePoints])
 
   // Intro animation: sweep from start to end in 1s on load
   useEffect(() => {
     if (!data || introStarted.current) return
     introStarted.current = true
 
-    const { start, end } = getTimeRange(data.contributions)
-    const totalRange = end.getTime() - start.getTime()
     const introDuration = 1000
     const t0 = Date.now()
 
@@ -112,7 +151,7 @@ function App() {
       const elapsed = Date.now() - t0
       const progress = Math.min(elapsed / introDuration, 1)
       const eased = 1 - Math.pow(1 - progress, 3)
-      setCurrentTime(new Date(start.getTime() + eased * totalRange))
+      setTimelineProgress(eased)
       if (progress < 1) {
         frameId = requestAnimationFrame(animate)
       }
@@ -130,7 +169,6 @@ function App() {
       return
     }
 
-    const { end } = getTimeRange(data.contributions)
     let lastFrameTime = Date.now()
 
     const animate = () => {
@@ -138,13 +176,12 @@ function App() {
       const elapsed = now - lastFrameTime
       lastFrameTime = now
 
-      setCurrentTime((prev) => {
-        if (!prev) return prev
-        const nextTimestamp = Math.min(prev.getTime() + elapsed * playbackSpeed, end.getTime())
-        if (nextTimestamp >= end.getTime()) {
+      setTimelineProgress((prev) => {
+        const next = clamp01(prev + (elapsed / BASE_PLAYBACK_DURATION_MS) * playbackSpeed)
+        if (next >= 1) {
           setIsPlaying(false)
         }
-        return new Date(nextTimestamp)
+        return next
       })
 
       animationFrameRef.current = requestAnimationFrame(animate)
@@ -275,11 +312,20 @@ function App() {
       )}
 
       <TimelineControl
-        data={data}
+        start={timelinePoints[0]}
+        end={timelinePoints[timelinePoints.length - 1]}
         currentTime={currentTime}
-        onTimeChange={setCurrentTime}
+        progress={timelineProgress}
+        onProgressChange={setTimelineProgress}
         isPlaying={isPlaying}
-        onPlayPause={() => setIsPlaying((p) => !p)}
+        onPlayPause={() => {
+          setIsPlaying((p) => {
+            if (!p && timelineProgress >= 1) {
+              setTimelineProgress(0)
+            }
+            return !p
+          })
+        }}
         playbackSpeed={playbackSpeed}
         onSpeedChange={setPlaybackSpeed}
         isMobile={isMobile}

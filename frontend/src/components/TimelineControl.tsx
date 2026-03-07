@@ -1,12 +1,11 @@
-import type { SeedData } from '@/data/types'
-import { getTimeRange } from '@/data/timeline'
-
 const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 
 interface TimelineControlProps {
-  data: SeedData
+  start: Date
+  end: Date
   currentTime: Date
-  onTimeChange: (time: Date) => void
+  progress: number
+  onProgressChange: (progress: number) => void
   isPlaying: boolean
   onPlayPause: () => void
   playbackSpeed: number
@@ -15,19 +14,18 @@ interface TimelineControlProps {
 }
 
 export function TimelineControl({
-  data,
+  start,
+  end,
   currentTime,
-  onTimeChange,
+  progress,
+  onProgressChange,
   isPlaying,
   onPlayPause,
   playbackSpeed,
   onSpeedChange,
   isMobile = false,
 }: TimelineControlProps) {
-  const { start, end } = getTimeRange(data.contributions)
-  const totalDuration = end.getTime() - start.getTime()
-  const currentProgress =
-    totalDuration > 0 ? (currentTime.getTime() - start.getTime()) / totalDuration : 0
+  const currentProgress = Math.max(0, Math.min(1, progress))
   const speedOptions = [0.5, 1, 2, 4, 8, 12, 16, 24, 32, 50]
 
   const formatDate = (date: Date) => {
@@ -39,17 +37,15 @@ export function TimelineControl({
   }
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const progress = parseFloat(e.target.value)
-    const newTime = new Date(start.getTime() + progress * totalDuration)
-    onTimeChange(newTime)
+    onProgressChange(parseFloat(e.target.value))
   }
 
   const handleReset = () => {
-    onTimeChange(start)
+    onProgressChange(0)
   }
 
   const handleJumpToEnd = () => {
-    onTimeChange(end)
+    onProgressChange(1)
   }
 
   const btnBase: React.CSSProperties = {
