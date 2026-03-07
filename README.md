@@ -14,14 +14,23 @@ A ideia é visualizar a construção da Ipê City (Seus projetos), a medida que 
 ## 🎯 Funcionalidades
 
 - **Visualização 3D em Cidade**: Cada prédio representa um repositório da organização, com nome visível no topo e altura proporcional às contribuições
-- **Interatividade**: 
+- **Interatividade**:
   - Tooltip ao passar o mouse sobre as edificações
   - Clique para selecionar um projeto e visualizar detalhes
-  - Painel lateral com informações detalhadas (abrir/fechar)
-- **Métricas de Contribuição**: 
+  - Painel lateral com informações detalhadas (abrir/fechar), com layout adaptado para mobile
+- **Métricas de Contribuição**:
   - Visualização por projeto (total de contribuições por repositório)
   - Visualização por desenvolvedor (contribuições individuais)
   - Métrica composta: commits + pull requests
+- **Timeline Cinemática**:
+  - Reprodução automática ao abrir a página (inicia em `0.5x`)
+  - Velocidades de reprodução de `0.5x` até `50x`
+  - Progressão por fases: casas -> pessoas -> projetos
+  - Projetos surgem no mapa na primeira contribuição e crescem ao longo da timeline
+- **Internacionalização (i18n)**:
+  - Idiomas disponíveis: `pt-BR`, `en`, `es`
+  - Seletor de idioma na interface
+  - Idioma persistido no navegador (`localStorage`)
 - **Acesso Público**: Página web acessível pela internet, sem necessidade de autenticação
 
 ## 🛠️ Tecnologias
@@ -32,6 +41,7 @@ A ideia é visualizar a construção da Ipê City (Seus projetos), a medida que 
 - **Three.js** - Engine gráfica 3D
 - **@react-three/drei** - Helpers e utilitários para R3F
 - **Vite** - Build tool e dev server
+- **GitHub Actions + GitHub Pages** - CI/CD e deploy estático automático
 - **Vitest** - Framework de testes unitários
 - **Playwright** - Testes end-to-end
 
@@ -45,7 +55,7 @@ A ideia é visualizar a construção da Ipê City (Seus projetos), a medida que 
 1. Clone o repositório:
 ```bash
 git clone <url-do-repositorio>
-cd cfo
+cd IpePromptNight
 ```
 
 2. Instale as dependências:
@@ -157,6 +167,7 @@ O repositório já inclui o workflow `.github/workflows/deploy-pages.yml`, que f
 - instalação de dependências da `frontend`
 - build com `VITE_BASE_PATH="/<repo>/" npm run build` para funcionar no Pages
 - publicação automática do conteúdo de `frontend/dist` no GitHub Pages
+- carregamento correto de dados em subpath (`/IpePromptNight/`) no deploy do Pages
 
 #### Como ativar no GitHub
 
@@ -192,7 +203,7 @@ URL esperada após o deploy:
 ## 📝 Status do Projeto
 
 **Versão**: 0.0.1  
-**Status**: MVP com dados fictícios  
+**Status**: MVP funcional com deploy automático, i18n e timeline evolutiva  
 **Branch**: `001-ipe-city-dashboard`
 
 ## 🤝 Contribuindo
