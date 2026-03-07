@@ -1,4 +1,5 @@
 import type { SeedData, Project, Developer, Contribution } from '@/data/types'
+import { MESSAGES, type Language } from '@/i18n'
 
 const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 
@@ -11,6 +12,7 @@ const NPC_COLORS = [
 
 interface SidePanelProps {
   data: SeedData
+  language: Language
   selectedProjectId: string | null
   isOpen: boolean
   onToggle: () => void
@@ -48,6 +50,7 @@ function devColor(id: string) {
 
 export function SidePanel({
   data,
+  language,
   selectedProjectId,
   isOpen,
   onToggle,
@@ -55,6 +58,7 @@ export function SidePanel({
   contributionsByProject,
   isMobile = false,
 }: SidePanelProps) {
+  const messages = MESSAGES[language]
   const selectedProject = selectedProjectId
     ? data.projects.find((p) => p.id === selectedProjectId)
     : null
@@ -95,7 +99,7 @@ export function SidePanel({
           letterSpacing: '0.02em',
         }}
       >
-        {isOpen ? 'Fechar' : 'Painel'}
+        {isOpen ? messages.panelClose : messages.panelOpen}
       </button>
 
       {isOpen && (
@@ -131,7 +135,7 @@ export function SidePanel({
               textShadow: '0 1px 4px rgba(0,0,0,0.3)',
             }}
           >
-            Contribuicoes
+            {messages.contributionsTitle}
           </h2>
 
           {selectedProject ? (
@@ -148,20 +152,20 @@ export function SidePanel({
                 {selectedProject.name}
               </h3>
               <p style={{ fontSize: 13, marginBottom: 10 }}>
-                Total:{' '}
+                {messages.totalLabel}:{' '}
                 <strong style={{ color: accentColor, fontSize: 16 }}>
                   {selectedProjectContributions}
                 </strong>{' '}
-                <span style={{ fontSize: 11, color: mutedColor }}>commits + PRs</span>
+                <span style={{ fontSize: 11, color: mutedColor }}>{messages.commitsAndPrs}</span>
                 {currentTime &&
                   selectedProjectContributions < selectedProject.totalContributions && (
                     <span style={{ fontSize: 11, color: mutedColor, marginLeft: 6 }}>
-                      (de {selectedProject.totalContributions})
+                      ({messages.fromLabel} {selectedProject.totalContributions})
                     </span>
                   )}
               </p>
               <h4 style={{ fontSize: 11, color: mutedColor, marginBottom: 6, fontWeight: 600 }}>
-                CONTRIBUIDORES
+                {messages.contributorsUpper}
               </h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 {projectContributors.map((c) => {
@@ -208,7 +212,7 @@ export function SidePanel({
                 textAlign: 'center',
               }}
             >
-              Clique em um edificio para ver detalhes
+              {messages.selectBuildingHint}
             </div>
           )}
 
@@ -229,7 +233,7 @@ export function SidePanel({
                 color: '#80c8ff',
               }}
             >
-              Projetos
+              {messages.projectsTitle}
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {data.projects.map((p: Project) => {
@@ -275,7 +279,7 @@ export function SidePanel({
                 color: '#80ffa0',
               }}
             >
-              Desenvolvedores
+              {messages.developersTitle}
             </h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {data.developers.map((d: Developer) => {

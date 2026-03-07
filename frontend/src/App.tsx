@@ -7,16 +7,19 @@ import { City } from '@/components/City'
 import { SidePanel } from '@/components/SidePanel'
 import { TimelineControl } from '@/components/TimelineControl'
 import { getContributionsUpTo } from '@/data/timeline'
+import { MESSAGES, detectLanguage, type Language } from '@/i18n'
 
 const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 const BASE_PLAYBACK_DURATION_MS = 15000
+const PEOPLE_START_PROGRESS = 0.18
+const PROJECTS_START_PROGRESS = 0.32
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
 }
 
 function buildTimelinePoints(data: SeedData): Date[] {
-  const points = Array.from(
+  const realPoints = Array.from(
     new Set(
       data.contributions
         .map((c) => new Date(c.timestamp).getTime())
@@ -26,7 +29,24 @@ function buildTimelinePoints(data: SeedData): Date[] {
     .sort((a, b) => a - b)
     .map((ts) => new Date(ts))
 
-  if (points.length > 0) return points
+  if (realPoints.length > 0) {
+    // Adds a pre-roll segment so playback can start before projects appear.
+    const firstContributionTs = realPoints[0].getTime()
+    const preStartTs = firstContributionTs - 1000 * 60 * 60 * 24 * 14
+    const realCount = realPoints.length
+    const preCount = Math.max(
+      2,
+      Math.round((PROJECTS_START_PROGRESS * (realCount - 1)) / (1 - PROJECTS_START_PROGRESS)),
+    )
+
+    const prePoints = Array.from({ length: preCount }, (_, i) => {
+      const t = (i + 1) / (preCount + 1)
+      return new Date(preStartTs + t * (firstContributionTs - preStartTs - 1))
+    })
+
+    return [...prePoints, ...realPoints]
+  }
+
   return [new Date()]
 }
 
@@ -48,6 +68,9 @@ function Scene({
   onSelect,
   onHover,
   contributionsByProject,
+  currentTime,
+  showPeople,
+  showProjects,
   isMobile,
 }: {
   data: SeedData
@@ -55,6 +78,9 @@ function Scene({
   onSelect: (id: string | null) => void
   onHover: (id: string | null) => void
   contributionsByProject: Map<string, number>
+  currentTime: Date
+  showPeople: boolean
+  showProjects: boolean
   isMobile: boolean
 }) {
   return (
@@ -88,6 +114,9 @@ function Scene({
         onSelectProject={onSelect}
         onHoverProject={onHover}
         contributionsByProject={contributionsByProject}
+        currentTime={currentTime}
+        showPeople={showPeople}
+        showProjects={showProjects}
       />
       <OrbitControls
         enablePan={!isMobile}
@@ -107,11 +136,16 @@ function App() {
   const [hoverProjectId, setHoverProjectId] = useState<string | null>(null)
   const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 900)
   const [timelineProgress, setTimelineProgress] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [isPlaying, setIsPlaying] = useState(true)
+  const [playbackSpeed, setPlaybackSpeed] = useState(0.5)
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
+  const [language, setLanguage] = useState<Language>(() => detectLanguage())
   const animationFrameRef = useRef<number>()
-  const introStarted = useRef(false)
+  const messages = MESSAGES[language]
+
+  useEffect(() => {
+    window.localStorage.setItem('app-language', language)
+  }, [language])
 
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= 900)
@@ -124,8 +158,10 @@ function App() {
       .then((loadedData) => {
         setData(loadedData)
         setTimelineProgress(0)
+        setPlaybackSpeed(0.5)
+        setIsPlaying(true)
       })
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load data'))
+      .catch((e) => setError(e instanceof Error ? e.message : messages.fallbackLoadError))
   }, [])
 
   const timelinePoints = useMemo(() => {
@@ -137,29 +173,6 @@ function App() {
     if (!data || timelinePoints.length === 0) return null
     return progressToDate(timelineProgress, timelinePoints)
   }, [data, timelineProgress, timelinePoints])
-
-  // Intro animation: sweep from start to end in 1s on load
-  useEffect(() => {
-    if (!data || introStarted.current) return
-    introStarted.current = true
-
-    const introDuration = 1000
-    const t0 = Date.now()
-
-    let frameId: number
-    const animate = () => {
-      const elapsed = Date.now() - t0
-      const progress = Math.min(elapsed / introDuration, 1)
-      const eased = 1 - Math.pow(1 - progress, 3)
-      setTimelineProgress(eased)
-      if (progress < 1) {
-        frameId = requestAnimationFrame(animate)
-      }
-    }
-
-    frameId = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(frameId)
-  }, [data])
 
   useEffect(() => {
     if (!isPlaying || !data) {
@@ -216,7 +229,7 @@ function App() {
           fontFamily: FONT_FAMILY,
         }}
       >
-        Erro: {error}
+        {messages.errorPrefix}: {error}
       </div>
     )
   }
@@ -237,7 +250,7 @@ function App() {
           fontWeight: 700,
         }}
       >
-        Carregando...
+        {messages.loading}
       </div>
     )
   }
@@ -265,8 +278,43 @@ function App() {
           border: '2px solid rgba(255,213,79,0.4)',
         }}
       >
-        Ipe City
+        Ipê City Projects Dashboard
       </h1>
+
+      <div
+        style={{
+          position: 'fixed',
+          top: isMobile ? 56 : 78,
+          left: isMobile ? 10 : 22,
+          display: 'flex',
+          gap: 6,
+          zIndex: 140,
+        }}
+      >
+        {(['pt-BR', 'en', 'es'] as const).map((lang) => (
+          <button
+            key={lang}
+            type="button"
+            onClick={() => setLanguage(lang)}
+            style={{
+              fontFamily: FONT_FAMILY,
+              padding: '4px 8px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.35)',
+              background:
+                language === lang
+                  ? 'linear-gradient(135deg, #ffd54f, #ffb300)'
+                  : 'rgba(20,25,45,0.75)',
+              color: language === lang ? '#1a1a2e' : '#fff',
+              fontSize: 11,
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            {lang}
+          </button>
+        ))}
+      </div>
 
       <Canvas
         style={{ touchAction: 'none' }}
@@ -279,6 +327,9 @@ function App() {
           onSelect={setSelectedProjectId}
           onHover={setHoverProjectId}
           contributionsByProject={contributionsByProject}
+          currentTime={currentTime}
+          showPeople={timelineProgress >= PEOPLE_START_PROGRESS}
+          showProjects={timelineProgress >= PROJECTS_START_PROGRESS}
           isMobile={isMobile}
         />
       </Canvas>
@@ -307,13 +358,14 @@ function App() {
             {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''}
           </span>
           {' — '}
-          {contributionsByProject.get(hoverProjectId) ?? 0} contribuicoes
+          {contributionsByProject.get(hoverProjectId) ?? 0} {messages.contributionsSuffix}
         </div>
       )}
 
       <TimelineControl
         start={timelinePoints[0]}
         end={timelinePoints[timelinePoints.length - 1]}
+        language={language}
         currentTime={currentTime}
         progress={timelineProgress}
         onProgressChange={setTimelineProgress}
@@ -332,6 +384,7 @@ function App() {
       />
       <SidePanel
         data={data}
+        language={language}
         selectedProjectId={selectedProjectId}
         isOpen={panelOpen}
         onToggle={() => setPanelOpen((o) => !o)}

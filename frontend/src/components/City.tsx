@@ -203,6 +203,9 @@ interface CityProps {
   selectedProjectId: string | null
   onSelectProject: (id: string | null) => void
   onHoverProject: (id: string | null) => void
+  currentTime: Date
+  showPeople: boolean
+  showProjects: boolean
   contributionsByProject?: Map<string, number>
 }
 
@@ -213,9 +216,25 @@ export function City({
   selectedProjectId,
   onSelectProject,
   onHoverProject,
+  currentTime,
+  showPeople,
+  showProjects,
   contributionsByProject,
 }: CityProps) {
   const positions = useMapLayout(projects)
+  const projectStartMap = useMemo(() => {
+    const starts = new Map<string, Date>()
+    for (const project of projects) {
+      const projectContribs = contributions
+        .filter((c) => c.projectId === project.id)
+        .map((c) => new Date(c.timestamp).getTime())
+        .filter((ts) => Number.isFinite(ts))
+      if (projectContribs.length > 0) {
+        starts.set(project.id, new Date(Math.min(...projectContribs)))
+      }
+    }
+    return starts
+  }, [projects, contributions])
 
   const developerPlacements = useMemo(() => {
     const devsByProject = new Map<string, Developer[]>()
@@ -306,8 +325,11 @@ export function City({
         )
       })}
 
-      {/* Buildings */}
-      {projects.map((project, i) => {
+      {/* Buildings (appear only after project start date) */}
+      {showProjects &&
+        projects.map((project, i) => {
+        const startedAt = projectStartMap.get(project.id)
+        if (startedAt && currentTime < startedAt) return null
         const [x, z] = positions[i]
         const currentContributions = contributionsByProject?.get(project.id)
         return (
@@ -331,12 +353,12 @@ export function City({
       ))}
 
       {/* Developer NPCs (near their buildings) */}
-      {developerPlacements.map(({ dev, pos, seed: s }) => (
+      {showPeople && developerPlacements.map(({ dev, pos, seed: s }) => (
         <NPC key={`dev-${dev.id}`} name={dev.name} position={pos} seed={s} isDeveloper showLabel />
       ))}
 
       {/* Resident NPCs (walking streets) */}
-      {RESIDENT_NPC_DATA.map((r, i) => (
+      {showPeople && RESIDENT_NPC_DATA.map((r, i) => (
         <NPC
           key={`resident-${i}`}
           name={r.name}

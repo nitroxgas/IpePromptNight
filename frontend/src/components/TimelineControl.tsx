@@ -1,8 +1,11 @@
+import { MESSAGES, type Language } from '@/i18n'
+
 const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 
 interface TimelineControlProps {
   start: Date
   end: Date
+  language: Language
   currentTime: Date
   progress: number
   onProgressChange: (progress: number) => void
@@ -16,6 +19,7 @@ interface TimelineControlProps {
 export function TimelineControl({
   start,
   end,
+  language,
   currentTime,
   progress,
   onProgressChange,
@@ -25,11 +29,13 @@ export function TimelineControl({
   onSpeedChange,
   isMobile = false,
 }: TimelineControlProps) {
+  const messages = MESSAGES[language]
   const currentProgress = Math.max(0, Math.min(1, progress))
   const speedOptions = [0.5, 1, 2, 4, 8, 12, 16, 24, 32, 50]
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('pt-BR', {
+    const locale = language === 'pt-BR' ? 'pt-BR' : language === 'es' ? 'es-ES' : 'en-US'
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -98,7 +104,7 @@ export function TimelineControl({
             minWidth: isMobile ? 100 : 90,
           }}
         >
-          {isPlaying ? 'Pausar' : 'Reproduzir'}
+          {isPlaying ? messages.pause : messages.play}
         </button>
         <button
           type="button"
@@ -111,7 +117,7 @@ export function TimelineControl({
             fontSize: 12,
           }}
         >
-          Inicio
+          {messages.start}
         </button>
         <button
           type="button"
@@ -124,7 +130,7 @@ export function TimelineControl({
             fontSize: 12,
           }}
         >
-          Fim
+          {messages.end}
         </button>
         <select
           value={playbackSpeed}
