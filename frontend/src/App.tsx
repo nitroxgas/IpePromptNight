@@ -13,6 +13,7 @@ const FONT_FAMILY = "'Segoe UI', Verdana, sans-serif"
 const BASE_PLAYBACK_DURATION_MS = 15000
 const PEOPLE_START_PROGRESS = 0.18
 const PROJECTS_START_PROGRESS = 0.32
+const HEADER_LEFT_DESKTOP = 20
 
 function clamp01(value: number): number {
   return Math.max(0, Math.min(1, value))
@@ -257,29 +258,61 @@ function App() {
 
   return (
     <div style={{ width: '100%', height: '100vh', background: '#78b8d8' }}>
-      {/* Game-style title */}
-      <h1
+      <div
         style={{
           position: 'fixed',
-          left: isMobile ? 10 : 20,
+          left: isMobile ? 10 : HEADER_LEFT_DESKTOP,
           top: isMobile ? 10 : 16,
-          margin: 0,
-          fontFamily: FONT_FAMILY,
-          fontSize: 'clamp(1.2rem, 3.5vw, 2rem)',
-          fontWeight: 800,
-          color: '#fff',
-          letterSpacing: '0.04em',
           zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: 8,
           pointerEvents: 'none',
-          textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(255,213,79,0.3)',
-          background: 'linear-gradient(135deg, rgba(30,40,60,0.8), rgba(50,70,100,0.7))',
-          padding: isMobile ? '6px 12px' : '8px 20px',
-          borderRadius: 12,
-          border: '2px solid rgba(255,213,79,0.4)',
         }}
       >
-        Ipê City Projects Dashboard
-      </h1>
+        {/* Game-style title */}
+        <h1
+          style={{
+            margin: 0,
+            fontFamily: FONT_FAMILY,
+            fontSize: 'clamp(1.2rem, 3.5vw, 2rem)',
+            fontWeight: 800,
+            color: '#fff',
+            letterSpacing: '0.04em',
+            textShadow: '0 2px 8px rgba(0,0,0,0.4), 0 0 20px rgba(255,213,79,0.3)',
+            background: 'linear-gradient(135deg, rgba(30,40,60,0.8), rgba(50,70,100,0.7))',
+            padding: isMobile ? '6px 12px' : '8px 20px',
+            borderRadius: 12,
+            border: '2px solid rgba(255,213,79,0.4)',
+          }}
+        >
+          Ipê City Projects Dashboard
+        </h1>
+
+        {/* Hover tooltip — right-aligned with title end */}
+        {!isMobile && hoverProjectId && (
+          <div
+            style={{
+              fontFamily: FONT_FAMILY,
+              padding: '8px 14px',
+              background: 'linear-gradient(135deg, rgba(30,40,60,0.9), rgba(50,70,100,0.85))',
+              color: '#fff',
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 600,
+              boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
+              border: '1px solid rgba(255,213,79,0.4)',
+            }}
+          >
+            <span style={{ color: '#ffd54f' }}>
+              {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''}
+            </span>
+            {' — '}
+            {contributionsByProject.get(hoverProjectId) ?? 0} {messages.contributionsSuffix}
+          </div>
+        )}
+      </div>
 
       <div
         style={{
@@ -333,34 +366,6 @@ function App() {
           isMobile={isMobile}
         />
       </Canvas>
-
-      {/* Hover tooltip — game style */}
-      {!isMobile && hoverProjectId && (
-        <div
-          style={{
-            fontFamily: FONT_FAMILY,
-            position: 'fixed',
-            left: 20,
-            top: 72,
-            padding: '8px 14px',
-            background: 'linear-gradient(135deg, rgba(30,40,60,0.9), rgba(50,70,100,0.85))',
-            color: '#fff',
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            zIndex: 10,
-            pointerEvents: 'none',
-            boxShadow: '0 2px 12px rgba(0,0,0,0.3)',
-            border: '1px solid rgba(255,213,79,0.4)',
-          }}
-        >
-          <span style={{ color: '#ffd54f' }}>
-            {data.projects.find((p) => p.id === hoverProjectId)?.name ?? ''}
-          </span>
-          {' — '}
-          {contributionsByProject.get(hoverProjectId) ?? 0} {messages.contributionsSuffix}
-        </div>
-      )}
 
       <TimelineControl
         start={timelinePoints[0]}
