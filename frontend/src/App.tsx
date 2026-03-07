@@ -73,7 +73,7 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
   const [hoverProjectId, setHoverProjectId] = useState<string | null>(null)
-  const [panelOpen, setPanelOpen] = useState(true)
+  const [panelOpen, setPanelOpen] = useState(() => window.innerWidth > 900)
   const [currentTime, setCurrentTime] = useState<Date | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
@@ -123,7 +123,7 @@ function App() {
   }, [data])
 
   useEffect(() => {
-    if (!isPlaying || !data || !currentTime) {
+    if (!isPlaying || !data) {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current)
       }
@@ -131,20 +131,23 @@ function App() {
     }
 
     const { end } = getTimeRange(data.contributions)
-    const startTime = Date.now()
-    const startTimestamp = currentTime.getTime()
+    let lastFrameTime = Date.now()
 
     const animate = () => {
-      const elapsed = (Date.now() - startTime) * playbackSpeed
-      const newTimestamp = Math.min(startTimestamp + elapsed, end.getTime())
-      const newTime = new Date(newTimestamp)
-      setCurrentTime(newTime)
+      const now = Date.now()
+      const elapsed = now - lastFrameTime
+      lastFrameTime = now
 
-      if (newTimestamp < end.getTime()) {
-        animationFrameRef.current = requestAnimationFrame(animate)
-      } else {
-        setIsPlaying(false)
-      }
+      setCurrentTime((prev) => {
+        if (!prev) return prev
+        const nextTimestamp = Math.min(prev.getTime() + elapsed * playbackSpeed, end.getTime())
+        if (nextTimestamp >= end.getTime()) {
+          setIsPlaying(false)
+        }
+        return new Date(nextTimestamp)
+      })
+
+      animationFrameRef.current = requestAnimationFrame(animate)
     }
 
     animationFrameRef.current = requestAnimationFrame(animate)
@@ -153,7 +156,7 @@ function App() {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [isPlaying, data, playbackSpeed, currentTime])
+  }, [isPlaying, data, playbackSpeed])
 
   const contributionsByProject = useMemo(() => {
     if (!data || !currentTime) return new Map<string, number>()

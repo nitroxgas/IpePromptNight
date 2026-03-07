@@ -160,7 +160,7 @@ function House({
         <planeGeometry args={[0.3, 0.3]} />
         <meshBasicMaterial color="#fff3c4" />
       </mesh>
-      <Html position={[0, 2.8, 0]} center style={{ pointerEvents: 'none' }}>
+      <Html position={[0, 2.8, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
         <div
           style={{
             fontFamily: FONT_FAMILY,

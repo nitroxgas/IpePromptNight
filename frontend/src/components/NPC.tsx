@@ -106,7 +106,7 @@ export function NPC({
         </mesh>
       )}
       {showLabel && (
-        <Html position={[0, 0.72, 0]} center style={{ pointerEvents: 'none' }}>
+        <Html position={[0, 0.72, 0]} center zIndexRange={[50, 0]} style={{ pointerEvents: 'none' }}>
           <div
             style={{
               fontSize: 8,

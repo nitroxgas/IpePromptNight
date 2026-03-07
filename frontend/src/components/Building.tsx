@@ -229,7 +229,12 @@ export function Building({
       ))}
 
       {/* Name label */}
-      <Html position={[0, height / 2 + 0.45, 0]} center style={{ pointerEvents: 'none' }}>
+      <Html
+        position={[0, height / 2 + 0.45, 0]}
+        center
+        zIndexRange={[50, 0]}
+        style={{ pointerEvents: 'none' }}
+      >
         <div
           style={{
             fontFamily,
